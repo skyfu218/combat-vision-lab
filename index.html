@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="對打運動影像分析模擬系統：拳擊、空手道、跆拳道、柔道。">
+  <title>Combat Vision Lab｜對打運動分析模擬系統</title>
+  <style>
+    :root{
+      --bg:#081019;--panel:#0e1924;--panel2:#111f2c;--line:#203244;
+      --text:#f5f8fb;--muted:#8da2b5;--accent:#36e2a4;--blue:#43a6ff;--red:#ff5b69;
+      --amber:#ffc857;--shadow:0 18px 55px rgba(0,0,0,.3);--radius:18px;
+    }
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 75% -10%,#18374a 0,transparent 32%),var(--bg);color:var(--text);font-family:Inter,"Noto Sans TC","PingFang TC",system-ui,sans-serif;min-height:100vh}
+    button,input,select{font:inherit}.app{max-width:1540px;margin:auto;padding:18px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:6px 2px 18px}
+    .brand{display:flex;align-items:center;gap:12px}.mark{width:42px;height:42px;border:1px solid #3a6170;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#143342,#0a1923);box-shadow:inset 0 0 20px #173c48}
+    .mark svg{width:28px}.brand h1{font-size:18px;margin:0;letter-spacing:.04em}.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}
+    .status{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent)}
+    .sport-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}.sport-btn{border:1px solid var(--line);background:#0b1721;color:#a9bac8;padding:12px 14px;border-radius:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;font-weight:700;transition:.2s}.sport-btn:hover,.sport-btn:focus-visible{border-color:#557087;color:white;outline:none}.sport-btn.active{color:#06120f;border-color:var(--accent);background:var(--accent);box-shadow:0 10px 35px rgba(54,226,164,.2)}
+    .layout{display:grid;grid-template-columns:minmax(0,1.72fr) minmax(330px,.9fr);gap:14px}.card{background:linear-gradient(180deg,rgba(17,31,44,.97),rgba(10,20,29,.97));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .viewer{overflow:hidden;min-height:620px;display:flex;flex-direction:column}.viewer-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+    .eyebrow{font-size:10px;letter-spacing:.16em;color:var(--accent);font-weight:800}.viewer-title{font-size:15px;font-weight:750;margin-top:3px}.head-actions{display:flex;gap:8px}
+    .ghost,.primary{border:1px solid var(--line);border-radius:10px;background:#122331;color:#dbe6ee;padding:8px 11px;cursor:pointer;font-size:12px}.primary{background:var(--accent);border-color:var(--accent);color:#071510;font-weight:800}.ghost:hover{border-color:#698499}.ghost:focus-visible,.primary:focus-visible{outline:2px solid white;outline-offset:2px}
+    .stage{position:relative;flex:1;min-height:430px;background:#0a1118;overflow:hidden}.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}.stage.has-video video{display:block}.arena{position:absolute;inset:0;background:linear-gradient(180deg,#192936 0 18%,#1d3947 18% 22%,#203f49 22% 100%);transition:.4s}.stage.has-video .arena{opacity:.15}.arena:after{content:"";position:absolute;left:11%;right:11%;top:27%;bottom:8%;border:2px solid rgba(255,255,255,.25);background:linear-gradient(90deg,rgba(255,91,105,.22) 0 48%,rgba(255,255,255,.08) 48% 52%,rgba(67,166,255,.22) 52%);transform:perspective(700px) rotateX(9deg);transform-origin:bottom}
+    .arena[data-sport="boxing"]:after{border:5px solid #e8eef2;box-shadow:inset 0 0 0 16px rgba(11,21,29,.25);background:repeating-linear-gradient(0deg,transparent 0 18%,rgba(255,255,255,.24) 18.5% 19%,transparent 19.5%)}
+    .arena[data-sport="taekwondo"]:after{border-radius:50%;background:radial-gradient(circle,rgba(67,166,255,.18) 0 42%,rgba(255,255,255,.08) 43% 45%,rgba(255,91,105,.18) 46%)}
+    .arena[data-sport="judo"]:after{background:repeating-linear-gradient(90deg,rgba(63,151,107,.22) 0 24%,rgba(247,208,84,.14) 25% 49%);border-color:#f2d365}
+    .overlay{position:absolute;inset:0;width:100%;height:100%}.scanline{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.45;animation:scan 4s linear infinite}@keyframes scan{from{top:20%}to{top:85%}}
+    .live-badge{position:absolute;left:15px;top:14px;background:rgba(7,15,22,.84);padding:7px 9px;border:1px solid #395061;border-radius:8px;font-size:10px;letter-spacing:.12em}.live-badge b{color:var(--red)}
+    .confidence{position:absolute;right:14px;top:14px;background:rgba(7,15,22,.84);border:1px solid #395061;border-radius:9px;padding:8px 10px;font-size:11px}.confidence span{color:var(--accent);font-weight:800}
+    .callout{position:absolute;min-width:145px;padding:8px 10px;border-radius:9px;background:rgba(6,15,22,.88);border:1px solid currentColor;font-size:11px;transform:translate(-50%,-100%);transition:left .5s,top .5s}.callout.red{color:var(--red)}.callout.blue{color:var(--blue)}.callout strong{display:block;color:white;font-size:13px}.callout em{font-style:normal;opacity:.78}.callout-r{left:34%;top:38%}.callout-b{left:68%;top:44%}
+    .score-strip{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:grid;grid-template-columns:1fr auto 1fr;background:rgba(5,12,18,.9);border:1px solid #314757;border-radius:12px;overflow:hidden;min-width:320px}.fighter-score{padding:9px 13px;font-size:10px}.fighter-score strong{font-size:19px;display:block}.fighter-score.red{border-top:3px solid var(--red)}.fighter-score.blue{text-align:right;border-top:3px solid var(--blue)}.time{padding:14px 12px;color:var(--muted);font-variant-numeric:tabular-nums}
+    .controls{padding:12px 15px 13px;background:#0b151e;border-top:1px solid var(--line)}.control-row{display:flex;align-items:center;gap:12px}.play{width:38px;height:38px;border-radius:50%;border:0;background:white;color:#0a151e;cursor:pointer;font-size:15px}.track{height:5px;background:#263a4a;border-radius:8px;flex:1;position:relative;cursor:pointer}.progress{height:100%;width:16%;background:var(--accent);border-radius:inherit}.event-pin{position:absolute;top:50%;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid #071018}.control-time{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}.legend{display:flex;gap:14px;margin-top:10px;font-size:10px;color:var(--muted)}.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+    .side{display:flex;flex-direction:column;gap:14px}.summary{padding:16px}.summary h2,.events h2{font-size:15px;margin:0}.summary-sub{font-size:11px;color:var(--muted);margin:4px 0 15px}.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.kpi{padding:12px;background:#0a151e;border:1px solid #1c3040;border-radius:12px}.kpi-label{color:var(--muted);font-size:10px}.kpi-value{font-size:22px;font-weight:800;margin:4px 0 1px}.kpi-note{font-size:9px;color:#6f879a}.compare{margin-top:13px}.compare-row{margin:10px 0}.compare-label{display:flex;justify-content:space-between;font-size:10px;color:#9cafbd}.bars{height:6px;display:flex;gap:3px;margin-top:5px}.bar-r,.bar-b{height:100%;border-radius:4px}.bar-r{background:var(--red)}.bar-b{background:var(--blue)}
+    .events{padding:16px;flex:1;min-height:270px}.events-head{display:flex;justify-content:space-between;align-items:center}.event-list{margin-top:11px;display:flex;flex-direction:column;gap:7px;max-height:252px;overflow:auto;padding-right:3px}.event{display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:9px;padding:9px;background:#0a151e;border:1px solid #1c3040;border-radius:11px;cursor:pointer}.event:hover{border-color:#3b566b}.event-time{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}.event-tech{font-size:11px;font-weight:700}.event-meta{font-size:9px;color:#7890a3;margin-top:3px}.tag{font-size:9px;border:1px solid currentColor;border-radius:10px;padding:3px 6px}.tag.red{color:var(--red)}.tag.blue{color:var(--blue)}
+    .notice{margin-top:14px;padding:10px 12px;border:1px solid #715f31;background:rgba(255,200,87,.07);border-radius:11px;color:#d9c68f;font-size:10px;line-height:1.55}
+    .workflow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:10px;padding:14px 16px;margin-bottom:14px}.workflow-step{display:flex;align-items:center;gap:10px;min-width:0}.step-no{width:28px;height:28px;flex:0 0 28px;border-radius:50%;display:grid;place-items:center;background:#172937;border:1px solid #355064;color:#8096a8;font-size:11px;font-weight:800}.workflow-step.active .step-no{background:var(--accent);border-color:var(--accent);color:#061510;box-shadow:0 0 18px rgba(54,226,164,.28)}.workflow-step.done .step-no{background:#173d36;border-color:#2b8f70;color:var(--accent)}.step-copy b{display:block;font-size:11px}.step-copy span{display:block;color:var(--muted);font-size:9px;margin-top:2px}.workflow-arrow{color:#4d687b}.analysis-btn[disabled]{opacity:.42;cursor:not-allowed}.analysis-btn.ready{box-shadow:0 0 0 3px rgba(54,226,164,.12)}
+    .analysis-layer{position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:rgba(5,13,20,.63);backdrop-filter:blur(2px);transition:.25s}.analysis-layer.hidden{opacity:0;pointer-events:none;visibility:hidden}.analysis-box{width:min(360px,82%);padding:18px;text-align:center;background:rgba(10,23,32,.94);border:1px solid #385165;border-radius:15px}.analysis-icon{font-size:28px}.analysis-box strong{display:block;margin:6px 0;font-size:14px}.analysis-box p{margin:0;color:var(--muted);font-size:10px;line-height:1.5}.analysis-progress{height:6px;margin-top:13px;background:#203443;border-radius:10px;overflow:hidden}.analysis-progress i{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--accent),var(--blue));transition:width .18s}.stage:not(.analysis-complete) .callout,.stage:not(.analysis-complete) .confidence,.stage:not(.analysis-complete) .scanline{opacity:0}.stage.analysis-complete .callout,.stage.analysis-complete .confidence,.stage.analysis-complete .scanline{opacity:1}
+    .motion-section{margin-top:16px;padding:18px;position:relative;overflow:hidden}.motion-head{display:flex;justify-content:space-between;gap:18px;align-items:end;margin-bottom:14px}.motion-head h2{margin:3px 0 0;font-size:20px}.motion-head p{margin:5px 0 0;color:var(--muted);font-size:11px}.motion-badge{border:1px solid #375268;background:#0a1720;border-radius:20px;padding:7px 10px;color:var(--accent);font-size:10px}.motion-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:12px}.motion-card{background:#09151e;border:1px solid #1e3342;border-radius:14px;overflow:hidden}.motion-card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 13px;border-bottom:1px solid #1e3342}.motion-card-head b{font-size:12px}.segmented{display:flex;background:#111f2b;border:1px solid #253c4e;border-radius:9px;padding:2px}.view-btn{border:0;background:transparent;color:#8297a9;padding:5px 8px;border-radius:6px;font-size:9px;cursor:pointer}.view-btn.active{background:#2e485b;color:white}.motion-stage{height:390px;position:relative;background:radial-gradient(circle at 50% 40%,#173643,#07121a 68%);overflow:hidden}.motion-canvas{width:100%;height:100%;display:block}.axis-label{position:absolute;color:#7890a3;font-size:8px}.axis-x{bottom:8px;right:12px}.axis-y{top:10px;left:12px}.motion-legend{position:absolute;left:12px;bottom:10px;display:flex;gap:12px;padding:6px 8px;border-radius:8px;background:rgba(4,12,18,.76);font-size:9px;color:#91a5b6}.motion-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}.motion-side{display:flex;flex-direction:column;gap:12px}.motion-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.motion-metric{padding:12px;background:#09151e;border:1px solid #1e3342;border-radius:12px}.motion-metric span{display:block;color:var(--muted);font-size:9px}.motion-metric strong{font-size:20px;display:block;margin-top:4px}.motion-metric small{font-size:9px;color:#6e879a}.speed-chart{padding:12px;background:#09151e;border:1px solid #1e3342;border-radius:12px;flex:1}.speed-chart h3{font-size:11px;margin:0 0 8px}.speed-chart svg{width:100%;height:140px;display:block}.chart-grid{stroke:#213543;stroke-width:1}.chart-red{fill:none;stroke:var(--red);stroke-width:3}.chart-blue{fill:none;stroke:var(--blue);stroke-width:3}.analysis-timeline{margin-top:12px;padding:13px;background:#09151e;border:1px solid #1e3342;border-radius:13px}.analysis-timeline-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.analysis-timeline-head b{font-size:12px}.timeline-rail{height:62px;position:relative;border-top:1px solid #334958;margin:18px 8px 0}.timeline-tick{position:absolute;top:-7px;width:13px;height:13px;border-radius:50%;transform:translateX(-50%);border:3px solid #09151e;cursor:pointer}.timeline-tick:after{content:attr(data-label);position:absolute;top:16px;left:50%;transform:translateX(-50%);white-space:nowrap;color:#8399aa;font-size:8px}.timeline-now{position:absolute;top:-10px;bottom:0;width:2px;background:var(--accent);left:15%}.timeline-now:before{content:"";position:absolute;top:-3px;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+    .motion-lock{position:absolute;inset:0;z-index:5;display:grid;place-items:center;background:rgba(5,13,20,.84);backdrop-filter:blur(5px);transition:.3s}.motion-lock.hidden{opacity:0;pointer-events:none;visibility:hidden}.motion-lock div{text-align:center}.motion-lock b{display:block;font-size:16px}.motion-lock span{display:block;color:var(--muted);font-size:11px;margin-top:6px}.org-footer{display:flex;justify-content:space-between;gap:24px;align-items:center;margin-top:16px;padding:14px 16px;background:#0b1721;border:1px solid var(--line);border-radius:15px;color:#71889a;font-size:10px}.org-brand{display:flex;align-items:center;gap:12px}.org-logo{width:70px;height:54px;object-fit:contain;background:white;border-radius:10px;padding:4px}.org-name strong{display:block;color:#e6edf2;font-size:13px}.org-name span{display:block;margin-top:3px;color:#8da2b5}.org-meta{text-align:right}
+    .modal{position:fixed;inset:0;background:rgba(2,7,11,.72);display:none;place-items:center;padding:20px;z-index:10}.modal.open{display:grid}.dialog{width:min(520px,100%);padding:20px;background:#101e2a;border:1px solid #355064;border-radius:18px;box-shadow:var(--shadow)}.dialog h3{margin:0 0 15px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:10px;color:var(--muted)}.field select,.field input{background:#09141d;color:white;border:1px solid #2b4152;border-radius:9px;padding:10px}.dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
+    @media(max-width:970px){.layout{grid-template-columns:1fr}.viewer{min-height:580px}.side{display:grid;grid-template-columns:1fr 1fr}.events{min-height:0}.motion-grid{grid-template-columns:1fr}.motion-side{display:grid;grid-template-columns:1fr 1fr}.workflow{grid-template-columns:1fr}.workflow-arrow{display:none}.org-footer{align-items:flex-start}}
+    @media(max-width:620px){.app{padding:10px}.topbar{align-items:flex-start}.status{display:none}.sport-nav{grid-template-columns:repeat(2,1fr)}.sport-btn{padding:10px 8px}.layout{gap:10px}.viewer{min-height:520px}.viewer-head{align-items:flex-start;gap:9px}.head-actions{flex-wrap:wrap;justify-content:flex-end}.stage{min-height:360px}.side{display:flex}.score-strip{min-width:290px}.callout{min-width:120px}.kpis{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr}.motion-section{padding:13px}.motion-head{align-items:flex-start;flex-direction:column}.motion-stage{height:310px}.motion-side{display:flex}.org-footer{flex-direction:column}.org-meta{text-align:left}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M6 28 17 8l5 11 5-7 7 16" stroke="#36e2a4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 32h24" stroke="#8da2b5" stroke-width="2"/></svg></div>
+      <div><h1>COMBAT VISION LAB</h1><p>多項對打運動影像分析模擬系統</p></div>
+    </div>
+    <div class="status"><span class="dot"></span>Local Demo Engine <b>v0.1</b></div>
+  </header>
+
+  <nav class="sport-nav" aria-label="選擇運動項目">
+    <button class="sport-btn active" data-sport="karate">🥋 空手道</button>
+    <button class="sport-btn" data-sport="boxing">🥊 拳擊</button>
+    <button class="sport-btn" data-sport="taekwondo">🦶 跆拳道</button>
+    <button class="sport-btn" data-sport="judo">◉ 柔道</button>
+  </nav>
+
+  <section class="workflow card" aria-label="影片分析流程">
+    <div class="workflow-step active" id="flowImport"><span class="step-no">1</span><div class="step-copy"><b>匯入影片</b><span id="fileStatus">尚未選擇影片</span></div></div>
+    <span class="workflow-arrow">→</span>
+    <div class="workflow-step" id="flowAnalyze"><span class="step-no">2</span><div class="step-copy"><b>開始分析</b><span>由你確認後才啟動模擬</span></div></div>
+    <span class="workflow-arrow">→</span>
+    <div class="workflow-step" id="flowReview"><span class="step-no">3</span><div class="step-copy"><b>檢視結果</b><span>3D 軌跡、速度與事件時間軸</span></div></div>
+  </section>
+
+  <section class="layout">
+    <article class="viewer card">
+      <div class="viewer-head">
+        <div><div class="eyebrow">LIVE ANALYSIS / 模擬</div><div class="viewer-title" id="viewerTitle">空手道・組手技術辨識</div></div>
+        <div class="head-actions">
+          <input type="file" id="videoInput" accept="video/*" hidden>
+          <button class="ghost" id="uploadBtn">匯入本機影片</button>
+          <button class="primary analysis-btn" id="startAnalysisBtn" disabled>▶ 開始分析</button>
+          <button class="primary" id="addEventBtn">＋ 新增事件</button>
+        </div>
+      </div>
+      <div class="stage" id="stage">
+        <video id="video" playsinline></video>
+        <div class="arena" id="arena" data-sport="karate"></div>
+        <canvas class="overlay" id="overlay" aria-label="紅藍選手骨架追蹤模擬畫面"></canvas>
+        <div class="scanline"></div>
+        <div class="live-badge"><b>●</b> SIMULATION</div>
+        <div class="confidence">追蹤信心 <span id="confidence">94%</span></div>
+        <div class="callout red callout-r"><strong id="redCallout">逆擊</strong><em id="redSpeed">估計 8.4 m/s</em></div>
+        <div class="callout blue callout-b"><strong id="blueCallout">前腳迴旋踢</strong><em id="blueSpeed">估計 11.2 m/s</em></div>
+        <div class="score-strip">
+          <div class="fighter-score red">RED / 紅方<strong id="redScore">3</strong></div>
+          <div class="time" id="matchClock">01:42</div>
+          <div class="fighter-score blue">BLUE / 藍方<strong id="blueScore">5</strong></div>
+        </div>
+        <div class="analysis-layer" id="analysisLayer">
+          <div class="analysis-box"><div class="analysis-icon" id="analysisIcon">🎬</div><strong id="analysisTitle">請先匯入對打影片</strong><p id="analysisMessage">影片只在目前瀏覽器中處理，不會自動上傳。</p><div class="analysis-progress"><i id="analysisProgress"></i></div></div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="control-row"><button class="play" id="playBtn" aria-label="播放或暫停">Ⅱ</button><div class="track" id="track"><div class="progress" id="progress"></div><div id="pins"></div></div><div class="control-time" id="controlTime">00:18 / 02:00</div></div>
+        <div class="legend"><span><i style="background:var(--red)"></i>紅方事件</span><span><i style="background:var(--blue)"></i>藍方事件</span><span><i style="background:var(--accent)"></i>目前位置</span></div>
+      </div>
+    </article>
+
+    <aside class="side">
+      <section class="summary card">
+        <h2 id="summaryTitle">空手道關鍵指標</h2><p class="summary-sub" id="summarySub">組手攻擊型態、移動與反應時間</p>
+        <div class="kpis" id="kpis"></div>
+        <div class="compare" id="compare"></div>
+        <div class="notice">⚠ 所有數值均為介面模擬資料；速度與距離屬影像估計值。未完成場地、鏡頭及影格率校正前，不作為正式運動科學量測或裁判判決。</div>
+      </section>
+      <section class="events card">
+        <div class="events-head"><h2>技術事件時間軸</h2><button class="ghost" id="exportBtn">匯出 JSON</button></div>
+        <div class="event-list" id="eventList"></div>
+      </section>
+    </aside>
+  </section>
+
+  <section class="motion-section card" id="motionSection">
+    <div class="motion-lock" id="motionLock"><div><b>3D Motion Analysis 尚未啟動</b><span>匯入影片後按「開始分析」，完成後才會顯示軌跡與事件。</span></div></div>
+    <div class="motion-head">
+      <div><div class="eyebrow">3D MOTION ANALYSIS / 模擬</div><h2 id="motionTitle">空手道移動與技術事件分析</h2><p>以場地座標呈現雙方移動、速度變化、攻擊事件與交互位置。</p></div>
+      <span class="motion-badge" id="motionStatus">等待分析</span>
+    </div>
+    <div class="motion-grid">
+      <article class="motion-card">
+        <div class="motion-card-head"><b>場地移動軌跡</b><div class="segmented" aria-label="視角切換"><button class="view-btn active" data-view="3d">3D</button><button class="view-btn" data-view="top">俯視</button><button class="view-btn" data-view="side">側視</button></div></div>
+        <div class="motion-stage"><canvas id="motionCanvas" class="motion-canvas" aria-label="紅藍選手三維移動軌跡模擬"></canvas><span class="axis-label axis-y">Y / 場地縱深</span><span class="axis-label axis-x">X / 左右位移</span><div class="motion-legend"><span><i style="background:var(--red)"></i>紅方軌跡</span><span><i style="background:var(--blue)"></i>藍方軌跡</span><span>● 技術事件</span></div></div>
+      </article>
+      <div class="motion-side">
+        <div class="motion-metrics" id="motionMetrics"></div>
+        <div class="speed-chart"><h3>移動速度變化（估計值）</h3><svg viewBox="0 0 320 140" role="img" aria-label="紅藍選手移動速度曲線"><path class="chart-grid" d="M20 20H310M20 55H310M20 90H310M20 125H310M20 15V125"/><polyline class="chart-red" id="redSpeedLine" points="20,105 65,74 105,90 150,48 195,71 240,35 305,67"/><polyline class="chart-blue" id="blueSpeedLine" points="20,92 65,101 105,59 150,81 195,43 240,70 305,28"/></svg><div class="legend"><span><i style="background:var(--red)"></i>紅方速度</span><span><i style="background:var(--blue)"></i>藍方速度</span></div></div>
+      </div>
+    </div>
+    <div class="analysis-timeline"><div class="analysis-timeline-head"><b>動作與技術事件時間軸</b><span class="summary-sub" id="timelineSummary">等待分析結果</span></div><div class="timeline-rail" id="motionTimeline"><i class="timeline-now" id="timelineNow"></i></div></div>
+  </section>
+
+  <footer class="org-footer"><div class="org-brand"><img class="org-logo" src="assets/tshst-logo.png" alt="臺灣運動健康科技學會標誌"><div class="org-name"><strong>臺灣運動健康科技學會</strong><span>Taiwan Society of Sports Health Technology</span></div></div><div class="org-meta">系統更新：2026 年 10 月<br>模擬版本｜未連接正式辨識模型</div></footer>
+</main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <form class="dialog" id="eventForm"><h3 id="modalTitle">新增技術事件</h3><div class="form-grid">
+    <div class="field"><label for="sideField">選手</label><select id="sideField"><option value="red">紅方</option><option value="blue">藍方</option></select></div>
+    <div class="field"><label for="techField">技術</label><select id="techField"></select></div>
+    <div class="field"><label for="timeField">時間（秒）</label><input id="timeField" type="number" min="0" max="120" step="0.1" value="18"></div>
+    <div class="field"><label for="valueField">估計速度／動作時間</label><input id="valueField" type="text" value="8.4 m/s" maxlength="20"></div>
+  </div><div class="dialog-actions"><button type="button" class="ghost" id="cancelBtn">取消</button><button type="submit" class="primary">加入時間軸</button></div></form>
+</div>
+
+<script>
+const sports={
+ karate:{title:'空手道・組手技術辨識',summary:'空手道關鍵指標',sub:'組手攻擊型態、移動與反應時間',tech:['逆擊','刻突','前腳迴旋踢','後腳迴旋踢','上段踢'],calls:['逆擊','前腳迴旋踢'],speeds:['估計 8.4 m/s','估計 11.2 m/s'],score:[3,5],kpis:[['總攻擊','18','次'],['有效攻擊率','44','%'],['平均反應','318','ms'],['平均距離','1.42','m']],compare:[['拳技比例',64,36],['主動進攻',48,52],['命中事件',43,57]],events:[[9.4,'red','刻突','估計 7.9 m/s'],[18.2,'blue','前腳迴旋踢','估計 11.2 m/s'],[32.6,'red','逆擊','估計 8.4 m/s'],[55.1,'blue','後腳迴旋踢','估計 10.1 m/s']]},
+ boxing:{title:'拳擊・拳種與節奏分析',summary:'拳擊關鍵指標',sub:'出拳量、命中區域、防守反應與組合拳',tech:['刺拳 Jab','後手直拳 Cross','左鉤拳 Hook','上鉤拳 Uppercut','閃躲 Slip'],calls:['刺拳 Jab','後手直拳 Cross'],speeds:['估計 7.6 m/s','估計 8.8 m/s'],score:[28,31],kpis:[['總出拳','74','拳'],['命中估計','27','%'],['每分鐘出拳','38','次'],['防守反應','246','ms']],compare:[['刺拳占比',58,42],['頭部攻擊',46,54],['前進壓迫',62,38]],events:[[6.8,'blue','刺拳 Jab','估計 7.1 m/s'],[14.1,'red','一二連拳','2 拳 / 0.42s'],[29.5,'blue','左鉤拳 Hook','估計 8.3 m/s'],[47.7,'red','閃躲 Slip','反應 238 ms']]},
+ taekwondo:{title:'跆拳道・踢擊與得分區分析',summary:'跆拳道關鍵指標',sub:'踢擊側、踢擊高度、旋轉與電子護具事件',tech:['前腳旋踢','後腳旋踢','下壓踢','後踢','旋轉踢'],calls:['前腳旋踢','旋轉踢'],speeds:['估計 12.7 m/s','旋轉 524°/s'],score:[7,9],kpis:[['總踢擊','31','次'],['頭部攻擊','23','%'],['旋轉技術','6','次'],['平均啟動','352','ms']],compare:[['前腳使用',67,33],['軀幹攻擊',44,56],['主動進攻',51,49]],events:[[8.1,'red','前腳旋踢','估計 12.7 m/s'],[20.4,'blue','後踢','估計 13.1 m/s'],[36.2,'red','下壓踢','高度 1.61 m'],[58.9,'blue','旋轉踢','旋轉 524°/s']]},
+ judo:{title:'柔道・抓握與投技階段分析',summary:'柔道關鍵指標',sub:'抓握、破勢、作與掛的階段時間',tech:['右自然體抓握','大外割','內股','背負投','寢技壓制'],calls:['右袖領抓握','大外割進入'],speeds:['抓握 1.8 s','進入 620 ms'],score:[1,0],kpis:[['有效進入','9','次'],['抓握控制','54','%'],['平均進入','682','ms'],['寢技時間','18.4','s']],compare:[['主導抓握',57,43],['投技進入',61,39],['地面控制',34,66]],events:[[7.2,'red','右袖領抓握','控制 2.1 s'],[19.8,'blue','內股進入','進入 740 ms'],[42.3,'red','大外割','進入 620 ms'],[66.5,'blue','寢技壓制','控制 8.7 s']]}
+};
+const motionProfiles={
+ karate:{title:'空手道移動與技術事件分析',metrics:[['紅方最高移動速度','2.84','m/s'],['藍方最高移動速度','3.12','m/s'],['總移動距離','14.8','m'],['攻擊事件','18','次']],red:'20,105 65,74 105,90 150,48 195,71 240,35 305,67',blue:'20,92 65,101 105,59 150,81 195,43 240,70 305,28'},
+ boxing:{title:'拳擊步法與出拳事件分析',metrics:[['紅方最高移動速度','2.35','m/s'],['藍方最高移動速度','2.51','m/s'],['總移動距離','19.4','m'],['出拳事件','74','拳']],red:'20,101 65,82 105,62 150,88 195,41 240,54 305,33',blue:'20,88 65,68 105,96 150,51 195,79 240,38 305,59'},
+ taekwondo:{title:'跆拳道移動與踢擊事件分析',metrics:[['紅方最高移動速度','2.92','m/s'],['藍方最高移動速度','3.21','m/s'],['總移動距離','16.2','m'],['踢擊事件','31','次']],red:'20,109 65,71 105,91 150,32 195,76 240,45 305,61',blue:'20,94 65,103 105,52 150,73 195,31 240,67 305,24'},
+ judo:{title:'柔道位移與技術進入分析',metrics:[['紅方最高移動速度','1.84','m/s'],['藍方最高移動速度','1.71','m/s'],['總移動距離','8.6','m'],['有效進入','9','次']],red:'20,102 65,94 105,76 150,84 195,59 240,73 305,48',blue:'20,96 65,82 105,91 150,66 195,75 240,52 305,69'}
+};
+let current='karate',playing=false,elapsed=0,duration=120,raf,last=performance.now();
+let analysisState='idle',analysisTimer=null,motionView='3d',videoUrl='';
+const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
+function render(){const d=sports[current];$('#viewerTitle').textContent=d.title;$('#summaryTitle').textContent=d.summary;$('#summarySub').textContent=d.sub;$('#arena').dataset.sport=current;$('#redCallout').textContent=d.calls[0];$('#blueCallout').textContent=d.calls[1];$('#redSpeed').textContent=d.speeds[0];$('#blueSpeed').textContent=d.speeds[1];$('#redScore').textContent=d.score[0];$('#blueScore').textContent=d.score[1];
+ $('#kpis').innerHTML=d.kpis.map(x=>`<div class="kpi"><div class="kpi-label">${x[0]}</div><div class="kpi-value">${x[1]}<small style="font-size:11px;color:var(--muted)"> ${x[2]}</small></div><div class="kpi-note">模擬分析值</div></div>`).join('');
+ $('#compare').innerHTML=d.compare.map(x=>`<div class="compare-row"><div class="compare-label"><span>${x[0]}</span><span>紅 ${x[1]}% ／ 藍 ${x[2]}%</span></div><div class="bars"><div class="bar-r" style="width:${x[1]}%"></div><div class="bar-b" style="width:${x[2]}%"></div></div></div>`).join('');
+ renderEvents(); $('#techField').innerHTML=d.tech.map(t=>`<option>${t}</option>`).join(''); drawPins();renderMotion();
+}
+function renderEvents(){const d=sports[current];$('#eventList').innerHTML=d.events.slice().sort((a,b)=>a[0]-b[0]).map((e,i)=>`<div class="event" data-time="${e[0]}" tabindex="0"><div class="event-time">${format(e[0])}</div><div><div class="event-tech">${e[2]}</div><div class="event-meta">${e[3]}・AI模擬標記</div></div><span class="tag ${e[1]}">${e[1]==='red'?'紅方':'藍方'}</span></div>`).join('');$$('.event').forEach(e=>{e.onclick=()=>seek(+e.dataset.time);e.onkeydown=x=>{if(x.key==='Enter')seek(+e.dataset.time)}})}
+function drawPins(){const colors={red:'var(--red)',blue:'var(--blue)'};$('#pins').innerHTML=sports[current].events.map(e=>`<i class="event-pin" style="left:${e[0]/duration*100}%;background:${colors[e[1]]}"></i>`).join('')}
+function format(s){s=Math.max(0,Math.floor(s));return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`}
+function seek(s){elapsed=Math.min(duration,Math.max(0,s));if(Number.isFinite($('#video').duration))$('#video').currentTime=elapsed;updateUI()}
+function updateUI(){const ratio=duration?elapsed/duration:0;$('#progress').style.width=`${ratio*100}%`;$('#controlTime').textContent=`${format(elapsed)} / ${format(duration)}`;$('#matchClock').textContent=format(Math.max(0,duration-elapsed));$('#timelineNow').style.left=`${ratio*100}%`}
+function setWorkflow(state){analysisState=state;const hasVideo=Boolean($('#video').src);const start=$('#startAnalysisBtn'),layer=$('#analysisLayer'),stage=$('#stage');
+ ['#flowImport','#flowAnalyze','#flowReview'].forEach(s=>$(s).classList.remove('active','done'));stage.classList.remove('analysis-complete');$('#motionLock').classList.remove('hidden');start.classList.remove('ready');$('#analysisProgress').style.width='0%';
+ if(state==='idle'){$('#flowImport').classList.add('active');start.disabled=true;start.textContent='▶ 開始分析';$('#analysisIcon').textContent='🎬';$('#analysisTitle').textContent='請先匯入對打影片';$('#analysisMessage').textContent='影片只在目前瀏覽器中處理，不會自動上傳。';$('#motionStatus').textContent='等待分析';}
+ if(state==='ready'){$('#flowImport').classList.add('done');$('#flowAnalyze').classList.add('active');start.disabled=false;start.classList.add('ready');start.textContent='▶ 開始分析';$('#analysisIcon').textContent='✓';$('#analysisTitle').textContent='影片已就緒';$('#analysisMessage').textContent='選擇運動項目後，按「開始分析」啟動模擬。';$('#motionStatus').textContent='影片已就緒';}
+ if(state==='analyzing'){$('#flowImport').classList.add('done');$('#flowAnalyze').classList.add('active');start.disabled=true;$('#analysisIcon').textContent='◎';$('#analysisTitle').textContent='正在建立動作與事件模型';$('#analysisMessage').textContent='模擬人物追蹤、移動速度與技術事件辨識中…';$('#motionStatus').textContent='分析中';}
+ if(state==='complete'){$('#flowImport').classList.add('done');$('#flowAnalyze').classList.add('done');$('#flowReview').classList.add('active');start.disabled=false;start.textContent='↻ 重新分析';layer.classList.add('hidden');stage.classList.add('analysis-complete');$('#motionLock').classList.add('hidden');$('#motionStatus').textContent='分析完成・模擬結果';}
+ else layer.classList.remove('hidden');$('#addEventBtn').disabled=state!=='complete';if(!hasVideo&&state!=='idle')setWorkflow('idle');renderMotion();}
+function startAnalysis(){if(!$('#video').src||analysisState==='analyzing')return;clearInterval(analysisTimer);setWorkflow('analyzing');elapsed=0;seek(0);let progress=0;analysisTimer=setInterval(()=>{progress=Math.min(100,progress+8+Math.random()*9);$('#analysisProgress').style.width=`${progress}%`;$('#startAnalysisBtn').textContent=`分析中 ${Math.floor(progress)}%`;if(progress>=100){clearInterval(analysisTimer);setTimeout(()=>{setWorkflow('complete');$('#startAnalysisBtn').textContent='↻ 重新分析';render();updateUI();},260)}},150)}
+function renderMotion(){const p=motionProfiles[current],d=sports[current];$('#motionTitle').textContent=p.title;$('#motionMetrics').innerHTML=p.metrics.map(m=>`<div class="motion-metric"><span>${m[0]}</span><strong>${m[1]} <small>${m[2]}</small></strong><small>模擬分析值</small></div>`).join('');$('#redSpeedLine').setAttribute('points',p.red);$('#blueSpeedLine').setAttribute('points',p.blue);const red=d.events.filter(e=>e[1]==='red').length,blue=d.events.filter(e=>e[1]==='blue').length;$('#timelineSummary').textContent=analysisState==='complete'?`${d.events.length} 個技術事件・紅方 ${red}／藍方 ${blue}`:'等待分析結果';$('#motionTimeline').querySelectorAll('.timeline-tick').forEach(x=>x.remove());if(analysisState==='complete')d.events.forEach(e=>{const tick=document.createElement('button');tick.className='timeline-tick';tick.dataset.label=`${format(e[0])} ${e[2]}`;tick.style.left=`${Math.min(100,e[0]/duration*100)}%`;tick.style.background=e[1]==='red'?'var(--red)':'var(--blue)';tick.setAttribute('aria-label',`${format(e[0])} ${e[2]}`);tick.onclick=()=>seek(e[0]);$('#motionTimeline').appendChild(tick)});}
+function loop(now){last=now;draw(now/1000);drawMotion(now/1000);raf=requestAnimationFrame(loop)}
+function draw(t){const c=$('#overlay'),r=c.getBoundingClientRect(),dpr=devicePixelRatio||1;if(c.width!==Math.round(r.width*dpr)||c.height!==Math.round(r.height*dpr)){c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr)}const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,r.width,r.height);if(analysisState!=='complete')return;const drift=Math.sin(t*1.6)*18,impact=Math.max(0,Math.sin(t*2.2));person(x,r.width*.34+drift,r.height*.56,'#ff5b69',1,impact);person(x,r.width*.66-drift,r.height*.56,'#43a6ff',-1,impact);}
+function drawMotion(t){const c=$('#motionCanvas'),r=c.getBoundingClientRect(),dpr=devicePixelRatio||1;if(!r.width||!r.height)return;if(c.width!==Math.round(r.width*dpr)||c.height!==Math.round(r.height*dpr)){c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr)}const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,r.width,r.height);x.lineWidth=1;x.strokeStyle='rgba(120,155,174,.24)';const pad=34;if(motionView==='top'){for(let i=0;i<=8;i++){x.beginPath();x.moveTo(pad+(r.width-pad*2)*i/8,pad);x.lineTo(pad+(r.width-pad*2)*i/8,r.height-pad);x.stroke()}for(let i=0;i<=6;i++){x.beginPath();x.moveTo(pad,pad+(r.height-pad*2)*i/6);x.lineTo(r.width-pad,pad+(r.height-pad*2)*i/6);x.stroke()}}else{for(let i=0;i<=7;i++){x.beginPath();x.moveTo(r.width*.5,pad);x.lineTo(pad+(r.width-pad*2)*i/7,r.height-pad);x.stroke()}for(let i=0;i<=5;i++){const yy=pad+(r.height-pad*2)*i/5;x.beginPath();x.moveTo(pad+(motionView==='3d'?i*20:0),yy);x.lineTo(r.width-pad-(motionView==='3d'?i*20:0),yy);x.stroke()}}if(analysisState!=='complete')return;const ratio=duration?elapsed/duration:0,phase=ratio*Math.PI*4+t*.08;const make=(side)=>Array.from({length:34},(_,i)=>{const q=i/33,a=phase*q+(side?1.8:0);let px=.5+(side?-.16:.16)*Math.cos(a*1.35)+Math.sin(a*2.2)*.08,py=.5+Math.sin(a*1.1)*.25+(side?-.04:.04);if(motionView==='side')py=.66-Math.abs(Math.sin(a*1.3))*.25;if(motionView==='3d'){py=.2+py*.64;px=.5+(px-.5)*(1.15-py*.38)}return[pad+px*(r.width-pad*2),pad+py*(r.height-pad*2)]});[[make(0),'#ff5b69'],[make(1),'#43a6ff']].forEach(([pts,color])=>{const visible=Math.max(2,Math.floor(pts.length*(.18+ratio*.82)));x.strokeStyle=color;x.lineWidth=3;x.shadowColor=color;x.shadowBlur=8;x.beginPath();pts.slice(0,visible).forEach((p,i)=>i?x.lineTo(...p):x.moveTo(...p));x.stroke();x.shadowBlur=0;const p=pts[visible-1];x.fillStyle=color;x.beginPath();x.arc(...p,7,0,Math.PI*2);x.fill();x.strokeStyle='white';x.lineWidth=2;x.stroke()});}
+function person(x,cx,cy,color,dir,impact){const scale=Math.min(innerWidth/800,1);const hip=[cx,cy],head=[cx+dir*4,cy-104],shoulder=[cx,cy-76],knee1=[cx-dir*28,cy+55],knee2=[cx+dir*24,cy+52],foot1=[cx-dir*42,cy+108],foot2=[cx+dir*41,cy+104],hand1=[cx+dir*(52+impact*22),cy-53-impact*12],hand2=[cx-dir*34,cy-46];x.strokeStyle=color;x.fillStyle=color;x.lineWidth=3;x.shadowColor=color;x.shadowBlur=9;x.strokeRect(cx-50,cy-126,100,245);x.shadowBlur=0;[[head,shoulder],[shoulder,hip],[shoulder,hand1],[shoulder,hand2],[hip,knee1],[hip,knee2],[knee1,foot1],[knee2,foot2]].forEach(p=>{x.beginPath();x.moveTo(...p[0]);x.lineTo(...p[1]);x.stroke()});[head,shoulder,hip,knee1,knee2,foot1,foot2,hand1,hand2].forEach(p=>{x.beginPath();x.arc(...p,4,0,Math.PI*2);x.fill()});}
+$$('.sport-btn').forEach(b=>b.onclick=()=>{current=b.dataset.sport;$$('.sport-btn').forEach(x=>x.classList.toggle('active',x===b));if($('#video').src)setWorkflow('ready');render()});
+$$('.view-btn').forEach(b=>b.onclick=()=>{motionView=b.dataset.view;$$('.view-btn').forEach(x=>x.classList.toggle('active',x===b));drawMotion(performance.now()/1000)});
+$('#startAnalysisBtn').onclick=startAnalysis;
+$('#playBtn').onclick=()=>{const v=$('#video');if(!Number.isFinite(v.duration))return;playing=!playing;$('#playBtn').textContent=playing?'Ⅱ':'▶';playing?v.play():v.pause()};
+$('#track').onclick=e=>{const r=e.currentTarget.getBoundingClientRect();seek((e.clientX-r.left)/r.width*duration)};
+$('#uploadBtn').onclick=()=>$('#videoInput').click();$('#videoInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const v=$('#video');if(videoUrl)URL.revokeObjectURL(videoUrl);videoUrl=URL.createObjectURL(f);v.src=videoUrl;$('#fileStatus').textContent=f.name;v.onloadedmetadata=()=>{duration=v.duration||120;elapsed=0;$('#stage').classList.add('has-video');playing=false;v.pause();$('#playBtn').textContent='▶';setWorkflow('ready');updateUI();drawPins()}};
+$('#addEventBtn').onclick=()=>{$('#timeField').value=elapsed.toFixed(1);$('#modal').classList.add('open')};$('#cancelBtn').onclick=()=>$('#modal').classList.remove('open');$('#modal').onclick=e=>{if(e.target===$('#modal'))$('#modal').classList.remove('open')};
+$('#eventForm').onsubmit=e=>{e.preventDefault();const time=+$('#timeField').value;if(!Number.isFinite(time)||time<0||time>duration)return alert(`時間須介於 0 與 ${duration.toFixed(1)} 秒`);sports[current].events.push([time,$('#sideField').value,$('#techField').value,$('#valueField').value||'人工標記']);$('#modal').classList.remove('open');renderEvents();drawPins()};
+$('#exportBtn').onclick=()=>{const payload={system:'Combat Vision Lab',organization:'臺灣運動健康科技學會',organizationEnglish:'Taiwan Society of Sports Health Technology',updated:'2026-10',sport:current,dataType:'simulation',events:sports[current].events,notice:'模擬資料，未經場地、鏡頭及影格率校正。'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`combat-vision-${current}-demo.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)};
+$('#video').ontimeupdate=()=>{if($('#video').duration){elapsed=$('#video').currentTime;updateUI()}};$('#video').onended=()=>{playing=false;$('#playBtn').textContent='▶'};
+render();setWorkflow('idle');updateUI();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
