@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "combat-vision-lab-skyfu218",
+    "site": "combat-vision-lab-skyfu218-v2",
     "public": ".",
     "ignore": [
       "firebase.json",

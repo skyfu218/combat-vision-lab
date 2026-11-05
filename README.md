@@ -40,3 +40,9 @@ python3 -m http.server 8080
 
 製作單位：臺灣運動健康科技學會（Taiwan Society of Sports Health Technology，暫採中文名稱直譯）  
 更新：2026 年 11 月（v0.2）
+
+## 正式發布
+
+- Firebase Hosting：`https://combat-vision-lab-skyfu218-v2.web.app`
+- Hosting site：`combat-vision-lab-skyfu218-v2`
+- Firebase project：`pulselens-fitness-skyfu218`
