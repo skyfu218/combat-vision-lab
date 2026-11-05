@@ -52,7 +52,7 @@
       <div class="mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M6 28 17 8l5 11 5-7 7 16" stroke="#36e2a4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 32h24" stroke="#8da2b5" stroke-width="2"/></svg></div>
       <div><h1>COMBAT VISION LAB</h1><p>多項對打運動影像分析模擬系統</p></div>
     </div>
-    <div class="status"><span class="dot"></span>Local Demo Engine <b>v0.1</b></div>
+    <div class="status"><span class="dot"></span>Local Demo Engine <b>v0.2</b></div>
   </header>
 
   <nav class="sport-nav" aria-label="選擇運動項目">
@@ -138,7 +138,7 @@
     <div class="analysis-timeline"><div class="analysis-timeline-head"><b>動作與技術事件時間軸</b><span class="summary-sub" id="timelineSummary">等待分析結果</span></div><div class="timeline-rail" id="motionTimeline"><i class="timeline-now" id="timelineNow"></i></div></div>
   </section>
 
-  <footer class="org-footer"><div class="org-brand"><img class="org-logo" src="assets/tshst-logo.png" alt="臺灣運動健康科技學會標誌"><div class="org-name"><strong>臺灣運動健康科技學會</strong><span>Taiwan Society of Sports Health Technology</span></div></div><div class="org-meta">系統更新：2026 年 10 月<br>模擬版本｜未連接正式辨識模型</div></footer>
+  <footer class="org-footer"><div class="org-brand"><img class="org-logo" src="assets/tshst-logo.png" alt="臺灣運動健康科技學會標誌"><div class="org-name"><strong>臺灣運動健康科技學會</strong><span>Taiwan Society of Sports Health Technology</span></div></div><div class="org-meta">系統更新：2026 年 11 月<br>模擬版本 v0.2｜未連接正式辨識模型</div></footer>
 </main>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -194,10 +194,10 @@ $$('.view-btn').forEach(b=>b.onclick=()=>{motionView=b.dataset.view;$$('.view-bt
 $('#startAnalysisBtn').onclick=startAnalysis;
 $('#playBtn').onclick=()=>{const v=$('#video');if(!Number.isFinite(v.duration))return;playing=!playing;$('#playBtn').textContent=playing?'Ⅱ':'▶';playing?v.play():v.pause()};
 $('#track').onclick=e=>{const r=e.currentTarget.getBoundingClientRect();seek((e.clientX-r.left)/r.width*duration)};
-$('#uploadBtn').onclick=()=>$('#videoInput').click();$('#videoInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const v=$('#video');if(videoUrl)URL.revokeObjectURL(videoUrl);videoUrl=URL.createObjectURL(f);v.src=videoUrl;$('#fileStatus').textContent=f.name;v.onloadedmetadata=()=>{duration=v.duration||120;elapsed=0;$('#stage').classList.add('has-video');playing=false;v.pause();$('#playBtn').textContent='▶';setWorkflow('ready');updateUI();drawPins()}};
+$('#uploadBtn').onclick=()=>$('#videoInput').click();$('#videoInput').onchange=e=>{const f=e.target.files[0];if(!f)return;const input=e.target,v=$('#video');clearInterval(analysisTimer);if(videoUrl)URL.revokeObjectURL(videoUrl);videoUrl=URL.createObjectURL(f);$('#fileStatus').textContent=`讀取中：${f.name}`;setWorkflow('idle');$('#analysisTitle').textContent='正在讀取影片';$('#analysisMessage').textContent='請稍候，系統正在確認影片長度與播放格式。';v.onloadedmetadata=()=>{duration=Number.isFinite(v.duration)?v.duration:120;elapsed=0;$('#stage').classList.add('has-video');playing=false;v.pause();$('#playBtn').textContent='▶';$('#fileStatus').textContent=f.name;setWorkflow('ready');updateUI();drawPins();input.value=''};v.onerror=()=>{$('#stage').classList.remove('has-video');$('#fileStatus').textContent='影片格式無法讀取，請改用 MP4（H.264）';setWorkflow('idle');$('#analysisTitle').textContent='無法讀取這支影片';$('#analysisMessage').textContent='請確認影片可在瀏覽器播放，或轉成 MP4（H.264）後再試。';input.value=''};v.src=videoUrl;v.load()};
 $('#addEventBtn').onclick=()=>{$('#timeField').value=elapsed.toFixed(1);$('#modal').classList.add('open')};$('#cancelBtn').onclick=()=>$('#modal').classList.remove('open');$('#modal').onclick=e=>{if(e.target===$('#modal'))$('#modal').classList.remove('open')};
 $('#eventForm').onsubmit=e=>{e.preventDefault();const time=+$('#timeField').value;if(!Number.isFinite(time)||time<0||time>duration)return alert(`時間須介於 0 與 ${duration.toFixed(1)} 秒`);sports[current].events.push([time,$('#sideField').value,$('#techField').value,$('#valueField').value||'人工標記']);$('#modal').classList.remove('open');renderEvents();drawPins()};
-$('#exportBtn').onclick=()=>{const payload={system:'Combat Vision Lab',organization:'臺灣運動健康科技學會',organizationEnglish:'Taiwan Society of Sports Health Technology',updated:'2026-10',sport:current,dataType:'simulation',events:sports[current].events,notice:'模擬資料，未經場地、鏡頭及影格率校正。'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`combat-vision-${current}-demo.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)};
+$('#exportBtn').onclick=()=>{const payload={system:'Combat Vision Lab',version:'0.2',organization:'臺灣運動健康科技學會',organizationEnglish:'Taiwan Society of Sports Health Technology',updated:'2026-11',sport:current,dataType:'simulation',events:sports[current].events,notice:'模擬資料，未經場地、鏡頭及影格率校正。'};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`combat-vision-${current}-demo.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)};
 $('#video').ontimeupdate=()=>{if($('#video').duration){elapsed=$('#video').currentTime;updateUI()}};$('#video').onended=()=>{playing=false;$('#playBtn').textContent='▶'};
 render();setWorkflow('idle');updateUI();requestAnimationFrame(loop);
 </script>
