@@ -43,6 +43,7 @@ python3 -m http.server 8080
 
 ## 正式發布
 
+- GitHub：`https://github.com/skyfu218/combat-vision-lab`
 - Firebase Hosting：`https://combat-vision-lab-skyfu218-v2.web.app`
 - Hosting site：`combat-vision-lab-skyfu218-v2`
 - Firebase project：`pulselens-fitness-skyfu218`
